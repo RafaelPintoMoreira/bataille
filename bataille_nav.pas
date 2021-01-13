@@ -162,8 +162,8 @@ var entrer1,sorti1,entrer2,sorti2,delta_place:integer;
 begin
     repeat
         entrer1:=0;
-        sorti1:=0;
         entrer2:=0;
+        sorti1:=0;
         sorti2:=0;
 
         while ((entrer1<1)or(entrer1>10)or
@@ -182,7 +182,7 @@ begin
             entrer2:=entrer2+1;
 
             gotoxy(2,18);
-            write('veuiller rentrer les 2 de la deuxieme cases!Le 1chiffre V le 2chiffre H!');
+            write('veuiller rentrer les 2 chiffre de la deuxieme cases!Le 1chiffre V le 2chiffre H!');
             gotoxy(2,19);
             readln(sorti1);
             sorti1:=sorti1+1;

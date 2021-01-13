@@ -1,0 +1,486 @@
+ALGORITHME : bataille
+//BUT: faire un jeux de bataille naval
+//ENTRER: position des bateau et attacke
+//SORTIE: le gangant qui a fait couler tout les bateau
+
+TYPE jeuxtbl=tableau[1..10,1..10] de caracter;
+
+procedure affiche_prejeux;     
+
+	ECRIRE bataille
+	ECRIRE bonjour
+	
+FINPROCEDUR
+
+fonction nomjoueur(nbrj:ENTIER):CHAINE;
+var nom :CHAINE
+	SI (nbrj=1) ALORS
+		ECRIRE Entrer le nom J1
+		LIRE nom
+	FINSI
+	SI (nbrj=2) ALORS
+		ECRIRE Entrer le nom J1
+		LIRE nom
+	FINSI
+	nomjoueur<--nom
+FINFONCTION
+
+fonction int_char(i:ENTIER):caracter
+
+	CAS i PAR
+		1 : int_char <-- ' '
+        2 : int_char <-- '1'
+        3 : int_char <-- '2'
+        4 : int_char <-- '3'
+        5 : int_char <-- '4'
+        6 : int_char <-- '5'
+        7 : int_char <-- '6'
+        8 : int_char <-- '7'
+        9 : int_char <-- '8'
+        10: int_char <-- '9'
+	FINCASPARMI
+FINFONCTION
+
+procedure affiche (var jeux:jeuxtbl)
+var i,j :ENTIER
+
+	POUR i DE 1 A 10 FAIRE
+		jeux[i,1]<-- int_char(i)
+		ALLERA(i*2,1)
+
+		jeux[1,i]<--int_char(i)
+		ALLERA(1,i+1)
+	FINPOUR
+	POUR i DE 1 A 10 FAIRE
+		POUR i DE 1 A 10 FAIRE
+			ALLERA(i*2,j)
+			SI jeux[i,j]='-' ALORS
+				coleurtext(bleu)
+			SINON
+				SI jeux[i,j]='X' ALORS
+					coleurtext(vert)
+				SINON
+					SI jeux[i,j]='O' ALORS
+						coleurtext(rouge)
+					SINON
+						coleurtext(orange)
+					FINSI
+				FINSI
+			FINSI
+			ECRIRE jeux[i,j]
+		FINPOUR
+	FINPOUR
+FINPROCEDUR
+
+fonction vide (var map:jeuxtbl; car:caracter):jeuxtbl
+var i,j :ENTIER
+
+	POUR i DE 1 A 10 FAIRE
+		POUR j DE 1 A 10 FAIRE
+
+			map[i,j]<--car
+		FINPOUR
+	FINPOUR
+	vide<--map
+FINFONCTION
+
+fonction remplace_map(entrer1,sortie1,entrer2,sortie2:ENTIER;map:jeuxtbl;sensPosBat:caracter):jeuxtbl
+var maptemp:jeuxtbl
+var i,j:ENTIER
+
+	maptemp<-- map
+
+	SI sensPosBat='V' ALORS
+		POUR i DE entrer2 A sortie2 FAIRE
+			POUR j DE entrer1 A sortie1 FAIRE
+				maptemp[i,j]<--'X'
+				entrer1<--entrer1+1
+			FINPOUR
+		FINPOUR
+		affiche(maptemp)
+	SINON
+		SI sensPosBat='H' ALORS
+			POUR i DE entrer1 A sortie1 FAIRE
+				POUR j DE entrer2 A sortie2 FAIRE
+					maptemp[j,i]<--'X'
+					entrer2<--entrer2+1
+				FINPOUR
+			FINPOUR
+			affiche(maptemp)
+		SINON
+			SI sensPosBat=' ' ALORS
+				maptemp[entrer2,entrer1]<--'*'
+			FINSI
+		FINSI
+	FINSI
+	remplace_map<-- maptemp
+FINFONCTION
+
+fonction saisir_emplacement(var map:jeuxtbl;sensPosBat:caracter;casesBateau:ENTIER):jeuxtbl
+var entrer1,sortie1,entrer2,sortie2,delta_place:ENTIER
+	repeter
+		entrer1<--0
+		entrer2<--0
+		sortie1<--0
+		sortie2<--0
+		TANTQUE ((entrer1<1)ou(entrer1>10)ou
+                (entrer2<1)ou(entrer2>10)ou
+                (sortie1<1)ou(sortie1>10)ou
+                (sortie2<1)ou(sortie2>10)) FAIRE
+			
+			ALLERA(2,15)
+			ECRIRE 'Veuiller entrer les 2 chiffre de la premier case'
+			ALLERA(2,16)
+			LIRE entrer1
+			entrer1<--entrer1+1
+			ALLERA(2,17)
+			LIRE entrer2
+			entrer2<--entrer2+1
+
+			ALLERA(2,18)
+			ECRIRE 'Veuiller entrer les 2 chiffre de la deuxieme case'
+			ALLERA(2,19)
+			LIRE sortie1
+			sortie1<--sortie1+1
+			ALLERA(2,20)
+			LIRE sortie2
+			sortie2<--sortie2+1
+		FINTANTQUE
+
+		SI sensPosBat='V' ALORS
+			delta_place<--(sortie1-entrer1)+1
+		FINSI
+		SI sensPosBat='H' ALORS
+			delta_place<--(sortie2-entrer2)+1
+		FINSI
+
+		SI ((map[entrer2,entrer1]='O')ou
+            (map[sortie2,sortie1]='O')ou
+            (map[entrer2,entrer1]='X')ou
+            (map[sortie2,sortie1]='X')ou
+            (delta_place>casesBateau)ou
+            (delta_place<casesBateau)) ALORS
+			ECRIRE ' emplacement error'
+		FINSI
+	JUSQUA ((map[entrer2,entrer1]='-')ET(map[sortie2,sortie1]='-')ET(delta_place=casesBateau))
+	saisir_emplacement<--remplace_map(entrer1,sortie1,entrer2,sortie2,map,sensPoseBat)
+FINFONCTION
+
+fonction place_libre(var map:jeuxtbl;carVide:caracter;bateauNom:CHAINE;casesBateau:ENTIER):jeuxtbl
+var i,j,nbrcase,casesLibr,jTemp:ENTIER
+	carLibr,sensPoseBAt:caracter
+	maptemp:jeuxtbl
+
+	casesLibr<--0
+	nbrcase<--1
+	jTemp<--2
+	carLibr<--' '
+	maptemp<--map
+
+	affiche(map)
+	ALLERA(2,12)
+	ECRIRE 'le'+bateauNom+'comprend'+casesBateau+'case.'
+	repeter
+		ALLERA(2,13)
+		ECRIRE 'Voulez vous le placer H ou V?'
+		ALLERA(2,14);
+		LIRE sensPosBat
+	JUSQUA (sensPosBat='V')ou(sensPosBat='H')
+
+	SI (sensPosBat='H')ou(sensPosBat='V') ALORS
+		POUR i DE 1 A 10 FAIRE
+			POUR j DE 1 A 10 FAIRE
+				SI maptemp[i,j]=carVide ALORS
+					casesLibr<--casesLibr+1
+				SINON
+					casesLibr<--0
+				FINSI
+
+				SI casesLibr=casesBateau ALORS
+					maptemp[i,j]<--'-'
+					jTemp<--j+1;
+					POUR nbrcase DE 1 A casesBateau FAIRE
+						jTemp<--jTemp-1
+						maptemp[i,jTemp]<--'-'
+					FINPOUR
+					casesLibr<--0
+				FINSI
+			FINPOUR
+			casesLibr<--0
+		FINPOUR
+	FINSI
+	affiche(maptemp)
+	place_libre<--saisir_emplacement(maptemp,sensPosBat,casesBateau)
+FINFONCTION
+
+fonction initiation_map(var map:jeuxtbl;carVide:caracter;bateauNom:CHAINE;casesBateau:ENTIER):jeuxtbl
+	map<--place_libre(map,carVide,bateauNom,casesBateau)
+	initiation_map<--map
+FINFONCTION
+
+fonction verifPos (entrer1,entrer2:ENTIER;var map:jeuxtbl):jeuxtbl
+var maptemp:jeuxtbl
+
+	maptemp<--map
+
+	SI map[entrer2,entrer1]='X' ALORS
+		SI((entrer1>1)ou(entrer1<10))ALORS
+			SI((entrer2>1)or(entrer2<10))ALORS
+				SI((map[entrer2-1,entrer1]='X')ou
+                    (map[entrer2,entrer1]='X')ou
+                    (map[entrer2,entrer1-1]='X')ou
+                    (map[entrer2,entrer1+1]='X')) ALORS
+						
+					ECRIRE 'Toucher'
+				SINON
+					ECRIRE 'Toucher et couler'
+				FINSI
+			SINON
+				SI entrer2=1 ALORS
+					SI ((map[entrer2+1,entrer1]='X')ou
+                        (map[entrer2,entrer1-1]='X')ou
+                        (map[entrer2,entrer1+1]='X')) ALORS
+						
+						ECRIRE 'Toucher'
+					SINON
+						ECRIRE 'Toucher et couler'
+					FINSI
+				SINON
+					SI entrer2=10 ALORS
+						SI ((map[entrer2-1,entrer1]='X')ou
+                            (map[entrer2,entrer1-1]='X')ou
+                            (map[entrer2,entrer1+1]='X')) ALORS
+							ECRIRE 'Toucher'
+						SINON
+							ECRIRE 'Toucher et couler'
+						FINSI
+					FINSI
+				FINSI
+			FINSI
+		SINON
+			SI entrer1=1 ALORS
+				SI	((entrer2>1)ou(entrer2<10))	ALORS
+					SI ((map[entrer2-1,entrer1]='X')ou
+                        (map[entrer2+1,entrer1]='X')ou
+                        (map[entrer2,entrer1+1]='X')) ALORS
+						ECRIRE 'Toucher'
+					SINON
+						ECRIRE 'Toucher et couler'
+					FINSI
+				SINON
+					SI entrer2=1 ALORS
+						SI ((map[entrer2+1,entrer1]='X')ou
+                            (map[entrer2,entrer1+1]='X')) ALORS
+							ECRIRE 'Toucher'
+						SINON
+							ECRIRE 'Toucher et couler'
+						FINSI
+					SINON
+						SI entrer1=10 ALORS
+							SI((entrer2>1)ou(entrer2<10)) ALORS
+								SI ((map[entrer2-1,entrer1]='X')ou
+									(map[entrer2+1,entrer1]='X')ou
+									(map[entrer2,entrer1-1]='X')) ALORS
+									ECRIRE 'Toucher'
+								SINON
+									ECRIRE 'Toucher et couler'
+								FINSI
+							SINON
+								SI entrer2=1 ALORS
+									SI ((map[entrer2+1,entrer1]='X')ou
+                               			(map[entrer2,entrer1-1]='X')) ALORS
+										ECRIRE 'Toucher'
+									SINON
+										ECRIRE 'Toucher et couler'
+									FINSI
+								SINON
+									SI entrer2=10 ALORS
+										SI ((map[entrer2-1,entrer1]='X')ou
+                                    		(map[entrer2,entrer1-1]='X')) ALORS
+											ECRIRE 'Toucher'
+										SINON
+											ECRIRE 'Toucher et couler'
+										FINSI
+									FINSI
+								FINSI
+							FINSI
+						FINSI
+					FINSI
+				FINSI
+			FINSI
+		FINSI
+	SINON
+		ECRIRE 'Rater'
+	FINSI
+	verifPos<--maptemp
+FINFONCTION
+
+fonction tirer(var map:jeuxtbl):jeuxtbl
+var entrer1,entrer2:ENTIER
+	maptemp:jeuxtbl
+
+	maptemp<--map
+	entrer1<--0
+	entrer2<--0
+
+	TANTQUE ((entrer1<1)ou(entrer1>10)ou
+            (entrer2<1)ou(entrer2>10)) FAIRE
+		
+		ALLERA(2,15)
+		ECRIRE ' veulliez entrer les 2 nombre de la case correspandans'
+		ALLERA(2,16)
+		LIRE entrer1
+		entrer1<--entrer1+1
+		ALLERA(2,17)
+		LIRE entrer2
+		entrer2<--entrer2+1
+	FINTANTQUE
+	maptemp<--verifPos(entrer1,entrer2,map)
+	tirer<--maptemp
+FINFONCTION
+
+fonction suivre_tire(var map:jeuxtbl;suivre_map:jeuxtbl):jeuxtbl
+var i,j:ENTIER
+	POUR i DE 1 A 10 FAIRE
+		POUR j DE 1 A 10 FAIRE
+			SI map[i,j]='*' ALORS
+				suivre_map[i,j]<--'/'
+			FINSI
+		FINPOUR
+	FINPOUR
+	suivre_tire<--suivre_map
+FINFONCTION
+
+fonction Vict(map:jeuxtbl;nb_a_abattre:ENTIER):booleen
+var i,j,n_case_Lbr:ENTIER
+
+	n_case_Lbr<--0
+	POUR i DE 1 A 10 FAIRE
+		POUR j DE 1 A 10 FAIRE
+			SI map[i,j]='*' ALORS
+				n_case_Lbr<--n_case_Lbr+1
+			FINSI
+		FINPOUR
+	FINPOUR
+
+	SI n_case_Lbr=nb_a_abattre ALORS
+		Vict<-- VRAIX
+	SINON
+		Vict<--FAUX
+	FINSI
+FINFONCTION
+
+var i,j,porte_avion,sous_marin,mini_croiseur,nbr_case_nav,nJ1,nJ2:ENTIER
+    n_porte_avion,n_sous_marin,n_mini_croiseur,nom1,nom2:CHAINE
+    car_vide,exitKay:caracter
+    map1, map2, s_map1, s_map2:jeuxtbl
+    vict1, vict2:booleen
+
+DEBUT
+	vict1<--FAUX
+    vict2<--FAUX
+    repeter
+        car_vide<--'O'
+        
+        porte_avion<--4>
+        sous_marin<-- 3
+        mini_croiseur<--2
+        nbr_case_nav<--9
+        nJ1<--1
+        nJ2<--2
+        
+        nom1<--' '
+        nom2<--' '
+        n_porte_avion<--'Porte avion'
+        n_sous_marin<--'Sous marin'
+        n_mini_croiseur<--'Mini-croiseur'
+       
+        map1<--vide(map1,car_vide)
+        map2<--vide(map2,car_vide)
+        s_map1<--vide(s_map1,car_vide)
+        s_map2<--vide(s_map2,car_vide)
+
+
+        
+        affiche_preJeux
+        
+        nom1<--nomjoueur(nJ1)
+        nom2<--nomjoueur(nJ2)
+
+        
+        affiche(map1)
+        ALLERA(50,5)
+        ECRIRE 'votre map '+nom1
+        ALLERA(2,20)
+        ECRIRE 'veuillez appuyer sur entrer pour commencer !'
+        
+        
+        map1<--initiation_map(map1,car_vide,n_sous_marin,sous_marin)
+        map1<--initiation_map(map1,car_vide,n_porte_avion,porte_avion)
+        map1<--initiation_map(map1,car_vide,n_mini_croiseur,mini_croiseur)
+        
+
+       
+        affiche(map2)
+        ALLERA(50,5)
+        ECRIRE 'votre map '+nom2
+        ALLERA(2,20)
+        ECRIRE 'veuillez appuyer sur entrer pour commencer !'
+
+        map2<--initiation_map(map2,car_vide,n_sous_marin,sous_marin)
+        map2<--initiation_map(map2,car_vide,n_porte_avion,porte_avion)
+        map2<--initiation_map(map2,car_vide,n_mini_croiseur,mini_croiseur)
+        
+
+        ALLERA(2,30)
+        ECRIRE 'Le placement est terminer. Le jeu peut commencer!'
+
+        TANTQUE ((vict2=FAUX)et(vict1=FAUX)) FAIRE
+            
+                affiche(s_map2)
+                ALLERA(2,14)
+                ECRIRE 'Choisi la position d'attaque! '+nom1
+                map2<--tirer(map2)
+                s_map2<--suivre_tire(map2,s_map2)
+                affiche(s_map2)
+                vict1<--Vict(map2,nbr_case_nav)
+                
+                SI (vict1=FAUX) ALORS
+              
+                    affiche(s_map1)
+                    ALLERA(2,14)
+                    ECRIRE 'Choisi la position d'attaque! '+nom2
+                    map1<--tirer(map1)
+                    s_map1<--suivre_tire(map1,s_map1)
+                    affiche(s_map1)
+                    vict2<--Vict(map1,nbr_case_nav)
+                    
+				FINSI
+        FINTANTQUE
+
+        couleurtext(blanche)
+        ALLERA(10,10)
+        ECRIRE 'Fin de la partie, nous avons un vainqueur'
+
+        SI (vict1=VRAIX) ALORS
+        
+            ALLERA(10,13)
+           
+            couleurtext(vert)
+            ECRIRE 'Felicitation '+nom1+', vous gagnez!'  
+		SINON
+             SI (vict2=VRAIX) ALORS
+            
+                ALLERA(10,13)
+                
+                couleurtext(vert)
+                ECRIRE 'Felicitation '+nom2+', vous  gagnez!'
+            FINSI
+        FINSI
+           
+        ALLERA(10,10)
+        ECRIRE'pour sortir entrer s pour rejouer r'
+        LIRE exitKay
+    JUSQUA((exitKay='S')ou(exitKay='s'))
+
+FIN
